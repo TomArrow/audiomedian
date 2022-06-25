@@ -137,7 +137,7 @@ namespace audiomedian
                         //double[] valuesHere = reader[i];
                         int bufferOffset = (int)(reader.getWavInfo().channelCount*(i - readBufferOffset));
                         float[] valuesHere = readBuffers[readerIndex];
-                        for(int c = 0; c < highestChannelCount && c< valuesHere.Length; c++)
+                        for(int c = 0; c < highestChannelCount && c <reader.getWavInfo().channelCount; c++)
                         {
                             samples[c].Add(valuesHere[(int)(bufferOffset+c)]);
                         }
