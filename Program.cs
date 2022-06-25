@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.Text;
-using NAudio.Wave;
-using NAudio.Wave.SampleProviders;
+//using NAudio.Wave;
+//using NAudio.Wave.SampleProviders;
 
 namespace audiomedian
 {
@@ -12,6 +12,8 @@ namespace audiomedian
     {
 
         static string outputFile = "output.wav";
+
+        const int bufferSize = 1024*1024;
 
         static void Main(string[] args)
         {
@@ -81,42 +83,98 @@ namespace audiomedian
 
             SuperWAV.WavInfo firstSourceInfo = readers[0].getWavInfo();
             //int channelCount = firstSourceInfo.channelCount;
-            SuperWAV outputWriter = new SuperWAV(outputFile, SuperWAV.WavFormat.WAVE64, firstSourceInfo.sampleRate, (ushort)highestChannelCount, firstSourceInfo.audioFormat, firstSourceInfo.bitsPerSample, longestDuration);
+            SuperWAV outputWriter = new SuperWAV(outputFile, SuperWAV.WavFormat.WAVE64, firstSourceInfo.sampleRate, (ushort)highestChannelCount, firstSourceInfo.audioFormat, firstSourceInfo.bitsPerSample, 0/*longestDuration*/);
 
-            for(ulong i=0;i< longestDuration; i++)
+            float[][] readBuffers = new float[readers.Count][];
+
+            ulong readBufferOffset = 0;
+            ulong writeBufferOffset = 0;
+
+            float[] outputBuffer = new float[bufferSize*highestChannelCount];
+
+            ulong innerIndex = 0;
+            for (ulong i = 0;i< longestDuration; i++, innerIndex++)
             {
-                List<double>[] samples = new List<double>[highestChannelCount];
-                double[] outputSamples = new double[highestChannelCount];
-                foreach(SuperWAV reader in readers)
+                // We need a buffer otherwise it's just too damn slow. Talking minutes for a few megabytes... ridiculous. :D Gotta improve SuperWAV maybe.
+
+                int readerIndex = 0; 
+                if (i % bufferSize == 0)
+                {
+                    // Freshen up le buffers
+                    foreach (SuperWAV reader in readers)
+                    {
+                        if (i < (reader.getWavInfo().dataLength / reader.getWavInfo().bytesPerTick))
+                        {
+                            readBuffers[readerIndex] = reader.getAs32BitFloatFast(i, i + bufferSize - 1);
+                        }
+                        readerIndex++;
+                    }
+                    readBufferOffset = i;
+
+
+                    if (i != 0)
+                    {
+                        // Flush into file.
+                        outputWriter.writeFloatArrayFast(outputBuffer, writeBufferOffset);
+                        writeBufferOffset = i;
+                    }
+                }
+
+
+                //List<double>[] samples = new List<double>[highestChannelCount];
+                List<float>[] samples = new List<float>[highestChannelCount];
+                for (int c = 0; c < highestChannelCount; c++)
+                {
+                    samples[c] = new List<float>();
+
+                }
+                //double[] outputSamples = new double[highestChannelCount];
+                readerIndex = 0;
+                foreach (SuperWAV reader in readers)
                 {
                     if(i< (reader.getWavInfo().dataLength / reader.getWavInfo().bytesPerTick))
                     {
-                        double[] valuesHere = reader[i];
+                        //double[] valuesHere = reader[i];
+                        int bufferOffset = (int)(reader.getWavInfo().channelCount*(i - readBufferOffset));
+                        float[] valuesHere = readBuffers[readerIndex];
                         for(int c = 0; c < highestChannelCount && c< valuesHere.Length; c++)
                         {
-                            samples[c].Add(valuesHere[c]);
+                            samples[c].Add(valuesHere[(int)(bufferOffset+c)]);
                         }
                     }
+                    readerIndex++;
                 }
                 for (int c = 0; c < highestChannelCount; c++)
                 {
                     samples[c].Sort();
                     int middleIndex = samples[c].Count / 2;
+                    float valueHere = 0;
                     if (samples[c].Count % 2 == 0)
                     {
                         // Not technically median. Odd. Or rather, not odd. Can happen with files of differing lenghs or straight up not odd counts. Oh well.
                         // Just average the middle values
-                        outputSamples[c] = (samples[c][middleIndex - 1] + samples[c][middleIndex])/2.0;
+                        //outputSamples[c] = (samples[c][middleIndex - 1] + samples[c][middleIndex])/2.0;
+                        valueHere = (samples[c][middleIndex - 1] + samples[c][middleIndex])/2.0f;
                     }
                     else
                     {
 
-                        outputSamples[c] = samples[c][middleIndex];
+                        //outputSamples[c] = samples[c][middleIndex];
+                        valueHere = samples[c][middleIndex];
                     }
 
+                    outputBuffer[(int)((i- writeBufferOffset) *(ulong)highestChannelCount+(ulong)c)] = valueHere;
                 }
-                outputWriter[i] = outputSamples;
 
+
+                //outputWriter[i] = outputSamples;
+
+            }
+
+            int leftOver =(int)(innerIndex % bufferSize);
+            if (leftOver > 0)
+            {
+                outputWriter.writeFloatArrayFast(outputBuffer, writeBufferOffset); // TODO Don't write more than necessary.
             }
 
 
@@ -133,7 +191,7 @@ namespace audiomedian
                 readers[i].Dispose();
             }*/
         }
-
+        /*
         static void MainOldNAudio(string[] args)
         {
 
@@ -200,6 +258,6 @@ namespace audiomedian
             {
                 readers[i].Dispose();
             }
-        }
+        }*/
     }
 }

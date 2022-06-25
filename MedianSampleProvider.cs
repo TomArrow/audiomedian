@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+/*
 using NAudio.Utils;
 
 namespace NAudio.Wave.SampleProviders
@@ -64,10 +65,10 @@ namespace NAudio.Wave.SampleProviders
         /// Must be PCM or IEEE float already
         /// </summary>
         /// <param name="mixerInput">IWaveProvider mixer input</param>
-        /*public void AddMixerInput(IWaveProvider mixerInput)
-        {
-            AddMixerInput(SampleProviderConverters.ConvertWaveProviderIntoSampleProvider(mixerInput));
-        }*/
+        //public void AddMixerInput(IWaveProvider mixerInput)
+       // {
+        //    AddMixerInput(SampleProviderConverters.ConvertWaveProviderIntoSampleProvider(mixerInput));
+        //}
 
         /// <summary>
         /// Adds a new mixer input
@@ -162,14 +163,14 @@ namespace NAudio.Wave.SampleProviders
                     int outIndex = offset;
                     for (int n = 0; n < samplesRead; n++,outIndex++)
                     {
-                        /*if (n >= outputSamples)
-                        {
-                            buffer[outIndex++] = sourceBuffer[n];
-                        }
-                        else
-                        {
-                            buffer[outIndex++] += sourceBuffer[n];
-                        }*/
+                        //if (n >= outputSamples)
+                        //{
+                        //    buffer[outIndex++] = sourceBuffer[n];
+                        //}
+                        //else
+                        //{
+                        //    buffer[outIndex++] += sourceBuffer[n];
+                        //}
                         samples[n][index] = sourceBuffer[n];
                         if(index == 0)
                         {
@@ -219,4 +220,4 @@ namespace NAudio.Wave.SampleProviders
         /// </summary>
         public ISampleProvider SampleProvider { get; private set; }
     }
-}
+}*/
