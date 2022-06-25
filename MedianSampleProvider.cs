@@ -7,7 +7,7 @@ namespace NAudio.Wave.SampleProviders
     /// <summary>
     /// A sample provider mixer, allowing inputs to be added and removed
     /// </summary>
-    public class MedianSampleProvider : ISampleProvider
+    public class MyMedianSampleProvider : ISampleProvider
     {
         private readonly List<ISampleProvider> sources;
         private float[] sourceBuffer;
@@ -17,7 +17,7 @@ namespace NAudio.Wave.SampleProviders
         /// Creates a new MixingSampleProvider, with no inputs, but a specified WaveFormat
         /// </summary>
         /// <param name="waveFormat">The WaveFormat of this mixer. All inputs must be in this format</param>
-        public MedianSampleProvider(WaveFormat waveFormat)
+        public MyMedianSampleProvider(WaveFormat waveFormat)
         {
             if (waveFormat.Encoding != WaveFormatEncoding.IeeeFloat)
             {
@@ -32,7 +32,7 @@ namespace NAudio.Wave.SampleProviders
         /// </summary>
         /// <param name="sources">Mixer inputs - must all have the same waveformat, and must
         /// all be of the same WaveFormat. There must be at least one input</param>
-        public MedianSampleProvider(IEnumerable<ISampleProvider> sources)
+        public MyMedianSampleProvider(IEnumerable<ISampleProvider> sources)
         {
             this.sources = new List<ISampleProvider>();
             foreach (var source in sources)
